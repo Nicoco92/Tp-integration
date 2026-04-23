@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  subtracker-app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://subtracker-db:27017/subtracker
+      - MONGO_DB_NAME=subtracker
+    env_file:
+      - .env
+    depends_on:
+      - subtracker-db
+
+  subtracker-db:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

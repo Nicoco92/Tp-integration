@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subtracker-mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: subtracker-db
+spec:
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subtracker-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: subtracker
+  template:
+    metadata:
+      labels:
+        app: subtracker
+    spec:
+      containers:
+        - name: subtracker
+          image: coco92/tp-integration:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://subtracker-db:27017/subtracker"
+          envFrom:
+            - secretRef:
+                name: subtracker-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: subtracker-service
+spec:
+  type: NodePort
+  selector:
+    app: subtracker
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30000

@@ -48,12 +48,16 @@ app.use((req, res, next) => {
 
 app.use("/auth", authRoutes);
 app.use("/subscriptions", subRoutes);
-app.use("/dashboard", subRoutes); 
+app.use("/dashboard", subRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/plaid", plaidRoutes);
 app.use("/api/user", require("./routes/authRoutes"));
 app.get("/", (req, res) => {
   res.redirect("/subscriptions");
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "UP", message: "SubTracker is running" });
 });
 
 app.use((err, req, res, next) => {
