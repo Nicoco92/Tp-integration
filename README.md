@@ -1,89 +1,27 @@
-# SubTracker
+# Rapport de Projet TP Intégration - SubTracker
 
-SubTracker est un petit service permettant de **centraliser et suivre vos abonnements** :  
-tableau de bord, calendrier des paiements, export des échéances, synchronisation bancaire et génération de lettres de résiliation assistée par **IA**.
+## Description du projet
 
-## Réaliser par : Johary RAKOTONIRINA, Nicolas CONTRERAS TIBOCHA et Maxime YE
+SubTracker est une application web de gestion d'abonnements (Node.js/MongoDB). L'objectif de ce projet était de conteneuriser l'application avec Docker, de l'orchestrer localement avec Docker Compose, puis de la déployer sur un cluster Kubernetes hébergé sur une machine virtuelle Azure.
 
-## Présentation
+## Explication du pipeline CI/CD
 
-SubTracker vous permet de :
+Le pipeline est géré via GitHub Actions. À chaque `git push` sur la branche `main` :
 
-- Ajouter et gérer vos abonnements (prix, cycle, prochaine échéance, catégorie)
-- Visualiser les paiements à venir dans un **calendrier**
-- Exporter vos échéances au format **.ics**
-- Synchroniser automatiquement vos abonnements via **Plaid**
-- Générer des **lettres de résiliation** grâce à l’IA
+1. **Tests & Build** : Installation des dépendances Node.js et exécution des tests.
+2. **Docker Build & Push** : Création de l'image Docker (via un multi-stage build pour l'optimisation) et envoi sécurisé sur Docker Hub.
+3. **Déploiement Continu (CD)** : Connexion SSH automatisée à la VM Azure pour déclencher un `kubectl rollout restart`, mettant à jour les pods sans interruption de service.
 
----
+## Étapes de déploiement
 
-## Installation (locale)
+1. Création d'une VM Ubuntu sur Azure et ouverture du port 30000.
+2. Installation de Docker et du cluster Kubernetes léger (K3s).
+3. Sécurisation des variables d'environnement via des **Secrets**Kubernetes (`kubectl create secret generic`).
+4. Application des manifestes (Deployment et Service NodePort) pour exposer l'application sur internet.
 
-### Prérequis
+## Difficultés rencontrées et solutions
 
-- **Node.js** ≥ 16
-- **npm**
-- **MongoDB** (URI accessible)
+- **Manque de RAM pour K3s** : Kubernetes plantait à cause d'un manque de RAM sur la VM Azure La solution a été d'augmenter la taille de la VM Azure pour passer à au moins 2 Go de RAM.
+- **Erreur de processeur (exec format error)** : Lors du build de l'image Docker, l'architecture du processeur posait problème car elle était incompatible avec le serveur Azure. J'ai résolu le problème en utilisant la compilation croisée (`docker build --platform linux/amd64`).
 
-### Étapes
-
-```bash
-# Cloner le dépôt
-git clone <repo-url>
-cd subTracker
-
-# Installer les dépendances
-npm install
-```
-
----
-
-## Technologies utilisées
-
-## Backend
-
-- **Node.js**  
-  Environnement JavaScript côté serveur  
-  Exécute l’application
-
-- **Express.js**  
-  Framework backend  
-  Gère les routes, middlewares, formulaires et sessions
-
-- **MongoDB**  
-  Base de données NoSQL  
-  Stocke les abonnements, utilisateurs et catégories
-
----
-
-## Frontend
-
-- **EJS**  
-  Moteur de templates  
-  Utilisé pour le dashboard, le login, l’inscription et les formulaires
-
-- **CSS**  
-  Styles personnalisés  
-  Gestion du layout, des couleurs et du responsive
-
-- **JavaScript**  
-  Interactions côté client  
-  Confirmation de suppression, actions dynamiques
-
----
-
-## Plaid
-
-Il faut se créer un compte gratuitement et récupérer le **PLAID_CLIENT_ID** et le **PLAID_SECRET**.
-
-## Gemini
-
-Générer une clé API de **Gemini** gratuitement.
-
-## Système de notification
-
-### Pour utliser le système de notification vous devez :
-
-**EMAIL_USER** = Mettre un mail dont vous être le propriétaire.
-
-**EMAIL_PASS** = Avec par exemple un mail Google se connecter, aller dans les paramètres d'application et aller dans **Mots de passe des applications** et générer un mot de passe.
+# Projet déployer sur : http://20.19.48.107:30000
